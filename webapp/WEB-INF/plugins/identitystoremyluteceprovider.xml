@@ -1,0 +1,18 @@
+<?xml version="1.0"  encoding="UTF-8"  standalone="no"?>
+<plug-in>
+    
+    <!-- Plugin informations -->
+    <name>identitystoremyluteceprovider</name>
+    <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
+    <version>1.0.0-SNAPSHOT</version>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
+    <description>identitystoremyluteceprovider.plugin.description</description>
+    <provider>identitystoremyluteceprovider.plugin.provider</provider>
+    <provider-url>http://lutece.paris.fr</provider-url>
+    <icon-url>images/admin/skin/feature_default_icon.png</icon-url>
+    <copyright>Copyright 2001-2017 Mairie de Paris</copyright>
+    <db-pool-required>0</db-pool-required>
+ </plug-in>
