@@ -57,6 +57,9 @@ public class IdentityStoreProviderService implements IMyLuteceIdentityProviderSe
     private static final String CLIENT_APP_CODE = AppPropertiesService.getProperty( PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
     private static final String BEAN_IDENTITY_SERVICE = "identitystoremyluteceprovider.identitystore.identityService";
     private static final String LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX = "ids.";
+    private static final String HAS_IDS_ATTRIBUTE = "has_ids_attribute";
+    private static final String CONSTANT_TRUE = "true";
+    private static final String CONSTANT_FALSE = "false";
 
     @Override
     public Map<String, String> getIdentityInformations( String strName )
@@ -68,13 +71,20 @@ public class IdentityStoreProviderService implements IMyLuteceIdentityProviderSe
         {
             IdentityDto identityDto = identityStoreService.getIdentityByConnectionId( strName, CLIENT_APP_CODE );
 
-            if ( ( identityDto != null ) && ( identityDto.getAttributes(  ) != null ) )
+            if ( ( identityDto != null ) && ( identityDto.getAttributes(  ) != null ) && !identityDto.getAttributes(  ).isEmpty( ) )
             {
                 for ( Map.Entry<String, AttributeDto> entry : identityDto.getAttributes(  ).entrySet(  ) )
                 {
                     UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ),
                         entry.getValue(  ).getValue(  ) );
                 }
+                UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + HAS_IDS_ATTRIBUTE,
+                        CONSTANT_TRUE );
+            }
+            if (  ( identityDto != null ) && ( identityDto.getAttributes(  ) != null ) && identityDto.getAttributes(  ).isEmpty( ) )
+            {
+                UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + HAS_IDS_ATTRIBUTE,
+                        CONSTANT_FALSE );
             }
         }
         catch ( IdentityNotFoundException infe )
