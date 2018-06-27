@@ -37,7 +37,7 @@ import fr.paris.lutece.plugins.identitystore.web.exception.IdentityNotFoundExcep
 import fr.paris.lutece.plugins.identitystore.web.rs.dto.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.web.rs.dto.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.web.service.IdentityService;
-import fr.paris.lutece.plugins.mylutece.service.IMyLuteceIdentityProviderService;
+import fr.paris.lutece.plugins.mylutece.service.IMyLuteceExternalIdentityProviderService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -51,7 +51,7 @@ import java.util.Map;
  * IdentityStoreProviderService
  *
  */
-public class IdentityStoreProviderService implements IMyLuteceIdentityProviderService
+public class IdentityStoreProviderService implements IMyLuteceExternalIdentityProviderService
 {
     private static final String PROPERTY_IDENTITY_STORE_APPLICATION_CODE = "identitystoremyluteceprovider.identityStoreApplicationCode";
     private static final String CLIENT_APP_CODE = AppPropertiesService.getProperty( PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
