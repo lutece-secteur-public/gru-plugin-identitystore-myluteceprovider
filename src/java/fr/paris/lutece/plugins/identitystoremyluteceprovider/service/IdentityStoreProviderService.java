@@ -33,17 +33,21 @@
  */
 package fr.paris.lutece.plugins.identitystoremyluteceprovider.service;
 
-import fr.paris.lutece.plugins.identitystore.web.exception.IdentityNotFoundException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v2.web.service.IdentityService;
+import fr.paris.lutece.plugins.identitystore.web.exception.IdentityNotFoundException;
+import fr.paris.lutece.plugins.mylutece.business.LuteceUserAttributeDescription;
 import fr.paris.lutece.plugins.mylutece.service.IMyLuteceExternalIdentityProviderService;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
-
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -53,13 +57,17 @@ import java.util.Map;
  */
 public class IdentityStoreProviderService implements IMyLuteceExternalIdentityProviderService
 {
-    private static final String PROPERTY_IDENTITY_STORE_APPLICATION_CODE = "identitystoremyluteceprovider.identityStoreApplicationCode";
+	   // Properties for page titles
+    private static final String PROPERTY_PROVIDER_ATTRIBUTE_DESCRIPTION_MESSAGE= "identitystoremyluteceprovider.provider.attributeDescriptionMessage";
+ 
+	private static final String PROPERTY_IDENTITY_STORE_APPLICATION_CODE = "identitystoremyluteceprovider.identityStoreApplicationCode";
     private static final String CLIENT_APP_CODE = AppPropertiesService.getProperty( PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
     private static final String BEAN_IDENTITY_SERVICE = "identitystoremyluteceprovider.identitystore.identityService";
     private static final String LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX = "ids.";
     private static final String HAS_IDS_ATTRIBUTE = "has_ids_attribute";
     private static final String CONSTANT_TRUE = "true";
     private static final String CONSTANT_FALSE = "false";
+    
 
     @Override
     public Map<String, String> getIdentityInformations( String strName )
@@ -94,5 +102,20 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
         }
 
         return UserInformations;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+   public List<LuteceUserAttributeDescription> getLuteceUserAttributesProvided(Locale locale)
+    {
+    	String strDescriptionMessage=I18nService.getLocalizedString(PROPERTY_PROVIDER_ATTRIBUTE_DESCRIPTION_MESSAGE, locale);
+    	List<LuteceUserAttributeDescription>  luteceUserAttributeDescriptions=  IMyLuteceExternalIdentityProviderService.super.getLuteceUserAttributesProvided(locale);
+    	luteceUserAttributeDescriptions.forEach(x->x.setDescription(strDescriptionMessage));
+    	return luteceUserAttributeDescriptions;
+    	
+    	
+    
     }
 }
