@@ -64,6 +64,14 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
     private static final String CLIENT_APP_CODE = AppPropertiesService.getProperty( PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
     private static final String BEAN_IDENTITY_SERVICE = "identitystoremyluteceprovider.identitystore.identityService";
     private static final String LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX = "ids.";
+    private static final String CERTIFICATE_INFORMATIONS_PREFIX = ".certificate.";
+    private static final String CERTIFICATE_INFORMATION_CODE = "code";
+    private static final String CERTIFICATE_INFORMATION_NAME = "name";
+    private static final String CERTIFICATE_INFORMATION_LEVEL = "level";
+    
+    
+    
+    
     private static final String HAS_IDS_ATTRIBUTE = "has_ids_attribute";
     private static final String CONSTANT_TRUE = "true";
     private static final String CONSTANT_FALSE = "false";
@@ -85,6 +93,17 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
                 {
                     UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ),
                         entry.getValue(  ).getValue(  ) );
+                    if(entry.getValue().isCertified() && entry.getValue().getCertificate()!=null)
+                    {
+                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_CODE,
+                                entry.getValue(  ).getCertificate().getCertifierCode() );
+                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_NAME,
+                                entry.getValue(  ).getCertificate().getCertifierName() );
+                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_LEVEL,
+                                Integer.toString(entry.getValue(  ).getCertificate().getCertifierLevel() ));
+                            	
+                    	
+                    }
                 }
                 UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + HAS_IDS_ATTRIBUTE,
                         CONSTANT_TRUE );
