@@ -42,10 +42,12 @@ import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v2.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityNotFoundException;
+import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.plugins.mylutece.business.LuteceUserAttributeDescription;
 import fr.paris.lutece.plugins.mylutece.service.IMyLuteceExternalIdentityProviderService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
@@ -114,7 +116,7 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
                         CONSTANT_FALSE );
             }
         }
-        catch ( IdentityNotFoundException infe )
+        catch ( IdentityStoreException | AppException infe )
         {
             AppLogService.error( "Error in IdentityStoreProviderService during loading identity for guid " + strName,
                 infe );
