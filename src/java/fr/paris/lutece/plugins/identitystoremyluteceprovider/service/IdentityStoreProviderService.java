@@ -37,19 +37,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
-import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.AttributeDto;
-import fr.paris.lutece.plugins.identitystore.v2.web.rs.dto.IdentityDto;
-import fr.paris.lutece.plugins.identitystore.v2.web.service.IdentityService;
-import fr.paris.lutece.plugins.identitystore.web.exception.IdentityNotFoundException;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.plugins.mylutece.business.LuteceUserAttributeDescription;
 import fr.paris.lutece.plugins.mylutece.service.IMyLuteceExternalIdentityProviderService;
 import fr.paris.lutece.portal.service.i18n.I18nService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
 
 /**
@@ -57,18 +64,16 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
  * IdentityStoreProviderService
  *
  */
+@ApplicationScoped
 public class IdentityStoreProviderService implements IMyLuteceExternalIdentityProviderService
 {
 	   // Properties for page titles
     private static final String PROPERTY_PROVIDER_ATTRIBUTE_DESCRIPTION_MESSAGE= "identitystoremyluteceprovider.provider.attributeDescriptionMessage";
  
 	private static final String PROPERTY_IDENTITY_STORE_APPLICATION_CODE = "identitystoremyluteceprovider.identityStoreApplicationCode";
-    private static final String CLIENT_APP_CODE = AppPropertiesService.getProperty( PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
-    private static final String BEAN_IDENTITY_SERVICE = "identitystoremyluteceprovider.identitystore.identityService";
     private static final String LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX = "ids.";
     private static final String CERTIFICATE_INFORMATIONS_PREFIX = ".certificate.";
     private static final String CERTIFICATE_INFORMATION_CODE = "code";
-    private static final String CERTIFICATE_INFORMATION_NAME = "name";
     private static final String CERTIFICATE_INFORMATION_LEVEL = "level";
     
     
@@ -77,34 +82,53 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
     private static final String HAS_IDS_ATTRIBUTE = "has_ids_attribute";
     private static final String CONSTANT_TRUE = "true";
     private static final String CONSTANT_FALSE = "false";
+
+    @Inject
+    @Named( IdentityStoreClientProducer.BEAN_IDENTITY_SERVICE )
+    private IdentityService _identityStoreService;
+
+    @Inject
+    @ConfigProperty( name = PROPERTY_IDENTITY_STORE_APPLICATION_CODE )
+    private Optional<String> _strClientAppCode;
     
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Map<String, String> getIdentityInformations( String strName )
     {
         Map<String, String> UserInformations = new HashMap<String, String>(  );
-        IdentityService identityStoreService = SpringContextService.getBean( BEAN_IDENTITY_SERVICE );
+        String strClientAppCode = _strClientAppCode.orElse( null );
+
+        if ( StringUtils.isBlank( strClientAppCode ) )
+        {
+            AppLogService.info( "IdentityStoreProviderService: property {} is not set, identity store not queried", PROPERTY_IDENTITY_STORE_APPLICATION_CODE );
+            return UserInformations;
+        }
 
         try
         {
-            IdentityDto identityDto = identityStoreService.getIdentityByConnectionId( strName, CLIENT_APP_CODE );
+            IdentitySearchResponse response = _identityStoreService.getIdentityByConnectionId( strName, strClientAppCode,
+                    new RequestAuthor( strClientAppCode, AuthorType.application.name( ) ) );
+            IdentityDto identityDto = ( ( response != null ) && ( response.getIdentities( ) != null ) && !response.getIdentities( ).isEmpty( ) )
+                    ? response.getIdentities( ).get( 0 ) : null;
 
             if ( ( identityDto != null ) && ( identityDto.getAttributes(  ) != null ) && !identityDto.getAttributes(  ).isEmpty( ) )
             {
-                for ( Map.Entry<String, AttributeDto> entry : identityDto.getAttributes(  ).entrySet(  ) )
+                for ( AttributeDto attribute : identityDto.getAttributes(  ) )
                 {
-                    UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ),
-                        entry.getValue(  ).getValue(  ) );
-                    if(entry.getValue().isCertified() && entry.getValue().getCertificate()!=null)
+                    UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + attribute.getKey(  ),
+                        attribute.getValue(  ) );
+                    if(attribute.isCertified())
                     {
-                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_CODE,
-                                entry.getValue(  ).getCertificate().getCertifierCode() );
-                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_NAME,
-                                entry.getValue(  ).getCertificate().getCertifierName() );
-                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + entry.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_LEVEL,
-                                Integer.toString(entry.getValue(  ).getCertificate().getCertifierLevel() ));
-                            	
-                    	
+                    	UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + attribute.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_CODE,
+                                attribute.getCertifier() );
+                    	if ( attribute.getCertificationLevel( ) != null )
+                    	{
+                    		UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + attribute.getKey(  ) + CERTIFICATE_INFORMATIONS_PREFIX+CERTIFICATE_INFORMATION_LEVEL,
+                                    attribute.getCertificationLevel( ).toString( ) );
+                    	}
                     }
                 }
                 UserInformations.put( LUTECE_USER_ATTRIBUTE_IDENTITYSTORE_PREFIX + HAS_IDS_ATTRIBUTE,
@@ -118,8 +142,7 @@ public class IdentityStoreProviderService implements IMyLuteceExternalIdentityPr
         }
         catch ( IdentityStoreException | AppException infe )
         {
-            AppLogService.error( "Error in IdentityStoreProviderService during loading identity for guid " + strName,
-                infe );
+            AppLogService.error( "Error in IdentityStoreProviderService during loading identity for guid {}", strName, infe );
         }
 
         return UserInformations;
